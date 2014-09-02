@@ -1,0 +1,41 @@
+# http://eed3si9n.com/testing-sbt-plugins
+
+#1. # starts a one-line comment
+#2. > name sends a task to sbt (and tests if it succeeds)
+#3. $ name arg* performs a file command (and tests if it succeeds)
+#4. -> name sends a task to sbt, but expects it to fail
+#5. -$ name arg* performs a file command, but expects it to fail
+
+$ exec git init
+$ exec touch README.md
+$ exec git add README.md
+$ exec git commit -m 'integration_test_sbt-sonatype-release'
+$ exec git tag -a v0.0 -m 'integration_test_sbt-sonatype-release'
+$ exec bash -c 'echo asdf >>README.md'
+$ exec git add README.md
+$ exec git commit -m '2integration_test_sbt-sonatype-release'
+
+#> s3-upload
+> testAndOptionallyShip
+
+-$ exists local.changelog.html
+# *** HERE *** <increment the version number each time you run it
+-$ exec /usr/local/bin/wget https://oss.sonatype.org/content/repositories/releases/com/gu/ztmp-scala-automation_2.10/1.2
+
+# *** HERE *** <increment the version number each time you run it
+$ exec git tag -a v1.2 -m '3integration_test_sbt-sonatype-release'
+$ exec bash -c 'git describe --match v[0-9]* HEAD'
+> reload
+
+> testAndOptionallyShip
+#> sonatypeReleaseAll
+#> s3-upload
+
+$ exists local.changelog.html
+$ exec /usr/local/bin/wget http://scala-automation.s3-website-eu-west-1.amazonaws.com/test-changelog.html
+$ exists test-changelog.html
+$ exec diff local.changelog.html test-changelog.html
+
+# should be in the releases repo
+# *** HERE *** <increment the version number each time you run it
+$ exec /usr/local/bin/wget https://oss.sonatype.org/content/repositories/releases/com/gu/ztmp-scala-automation_2.10/1.2

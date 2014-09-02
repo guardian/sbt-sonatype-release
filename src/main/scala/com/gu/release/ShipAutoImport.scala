@@ -1,4 +1,4 @@
-package com.gu.ship
+package com.gu.release
 
 /*
 Define another object that extends AutoImport. The contents of this object will

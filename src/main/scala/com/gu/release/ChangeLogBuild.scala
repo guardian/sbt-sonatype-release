@@ -1,4 +1,4 @@
-package com.gu.ship
+package com.gu.release
 
 import sbt.Keys.TaskStreams
 import sbt._
@@ -74,7 +74,7 @@ object ChangeLogBuild {
         else ""
     })
     val prepend = List("<link rel='stylesheet' id='page_css' href='changelog.css' type='text/css' media='all' />")
-    val file = new java.io.File("docs/local.changelog.html")
+    val file = new java.io.File("local.changelog.html")
     val finalResult = htmlLines.right.map(htmlLines => IO.writeLines(file, prepend ++ htmlLines))
 
     if (finalResult.isLeft) {
