@@ -8,8 +8,8 @@ before_install:
 - openssl aes-256-cbc -out src/sbt-test/sbt-sonatype-release/simple/local.secring.gpg
   -in src/sbt-test/sbt-sonatype-release/simple/secring.gpg.enc -pass pass:$SONATYPE_PASSWORD
   -d
-- openssl aes-256-cbc -out src/sbt-test/sbt-sonatype-release/simple/local.sonatypecredentials.sbt
-  -in src/sbt-test/sbt-sonatype-release/simple/sonatypecredentials.sbt.enc -pass pass:$SONATYPE_PASSWORD
+- openssl aes-256-cbc -out src/sbt-test/sbt-sonatype-release/simple/local.credentials.sbt
+  -in src/sbt-test/sbt-sonatype-release/simple/credentials.sbt.enc -pass pass:$SONATYPE_PASSWORD
   -d
 script: sbt test
 after_success: '[[ $TRAVIS_TAG == v[0-9.]* ]] && { sbt publish; };'
