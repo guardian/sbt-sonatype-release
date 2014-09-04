@@ -1,10 +1,25 @@
+import bintray.Keys._
+import com.typesafe.sbt.SbtGit._
+
 name := "sbt-sonatype-release"
 
 organization := "com.gu"
 
-version := "1.0-SNAPSHOT"
-
 sbtPlugin := true
+
+publishMavenStyle := false
+
+bintrayPublishSettings
+
+credentialsFile in bintray in Global := new File("local.bintraycredentials.properties")
+
+repository in bintray := "sbt-plugins"
+
+licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
+bintrayOrganization in bintray := Some("guardian")
+
+versionWithGit
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.1" % "test"

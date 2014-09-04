@@ -1,0 +1,18 @@
+language: scala
+before_install:
+- openssl aes-256-cbc -out local.bintraycredentials.properties -in bintraycredentials.properties.enc
+  -pass pass:$SONATYPE_PASSWORD -d
+- openssl aes-256-cbc -out src/sbt-test/sbt-sonatype-release/simple/local.pubring.gpg
+  -in src/sbt-test/sbt-sonatype-release/simple/pubring.gpg.enc -pass pass:$SONATYPE_PASSWORD
+  -d
+- openssl aes-256-cbc -out src/sbt-test/sbt-sonatype-release/simple/local.secring.gpg
+  -in src/sbt-test/sbt-sonatype-release/simple/secring.gpg.enc -pass pass:$SONATYPE_PASSWORD
+  -d
+- openssl aes-256-cbc -out src/sbt-test/sbt-sonatype-release/simple/local.sonatypecredentials.sbt
+  -in src/sbt-test/sbt-sonatype-release/simple/sonatypecredentials.sbt.enc -pass pass:$SONATYPE_PASSWORD
+  -d
+script: sbt test
+after_success: '[[ $TRAVIS_TAG == v[0-9.]* ]] && { sbt publish; };'
+env:
+  global:
+    secure: A/+417SIF5i7kmMe37E8cUUHIz3aatYF0kUQQujpIulEsaIdWdiFmsfSJTupgaBpuNe92BncS9qYppk392VUmd2WkbSig3K1BKFaZXk+ZdK0AxmYPKLjPAP49hV5Kwx+k64zfaPwqsjRBZWxFZJYk7SSW6otBX2CoQLsS9aX1aA=
