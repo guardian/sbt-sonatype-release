@@ -22,18 +22,16 @@ bintrayOrganization in bintray := Some("guardian")
 versionWithGit
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.8.2")
+addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.1")
 
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "0.2.1")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-s3" % "0.8")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.0")
 
 //resolvers += "jgit-repo" at "http://download.eclipse.org/jgit/maven"
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.6.4")
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.9.3")
 
 ScriptedPlugin.scriptedSettings
 
