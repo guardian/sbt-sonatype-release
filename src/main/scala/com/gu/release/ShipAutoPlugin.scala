@@ -1,14 +1,12 @@
 package com.gu.release
 
-import com.typesafe.sbt.S3Plugin
-import S3Plugin.S3._
 import com.typesafe.sbt.SbtGit.git
 import com.typesafe.sbt.git.ConsoleGitRunner
 import com.typesafe.sbt.pgp.PgpKeys
 import sbt.Keys._
 import sbt._
 import xerial.sbt.Sonatype
-import xerial.sbt.Sonatype.SonatypeKeys
+import xerial.sbt.Sonatype.SonatypeCommand
 
 object ShipAutoPlugin extends AutoPlugin {
 
@@ -29,14 +27,40 @@ object ShipAutoPlugin extends AutoPlugin {
 
   lazy val buildingNewVersion = settingKey[Boolean]("whether we're building a new version to ship")
 
-  override def projectSettings: Seq[Def.Setting[_]] = ChangeLogBuild.settings ++
+  val shipToSonatype = Command.command("shipToSonatype") { state =>
+    "test" ::
+      "publishSigned" ::
+      "sonatypeReleaseAll" ::
+      state
+  }
+
+  /**
+    * Convert the given command string to a release step action, preserving and invoking remaining commands
+    * stolen from https://github.com/sbt/sbt-release/blob/7e0abd698f66f75f9e85ebd0f722b67b581d96c3/src/main/scala/ReleasePlugin.scala#L102
+    */
+  def releaseStepCommandAndRemaining(command: String, log: Logger): State => State = { st: State =>
+
+    @annotation.tailrec
+    def runCommand(command: String, state: State): State = {
+      import sbt.complete.Parser
+      log.info(s"running command: $command")
+      val nextState = Parser.parse(command, state.combinedParser) match {
+        case Right(cmd) => cmd()
+        case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+      }
+      nextState.remainingCommands.toList match {
+        case Nil => nextState
+        case head :: tail => runCommand(head, nextState.copy(remainingCommands = tail))
+      }
+    }
+    runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
+  }
+
+  override def projectSettings: Seq[Def.Setting[_]] =
     Sonatype.sonatypeSettings ++
-    S3Plugin.s3Settings ++
     Seq[Setting[_]](
 
     buildingNewVersion := git.gitCurrentTags.value.contains(latestGitTag.value)
-      ,
-    mappings in upload := Seq((new java.io.File("local.changelog.html"),name.value + "-changelog.html"))
       ,
     latestGitTag := ConsoleGitRunner("describe", "--match","v[0-9]*","HEAD")(file("."))
       ,
@@ -65,8 +89,7 @@ object ShipAutoPlugin extends AutoPlugin {
             val log = streams.value.log
             log.info("shipIt")
             // happens in parallel (I hope!)
-            SonatypeKeys.sonatypeReleaseAll.value
-            S3Plugin.S3.upload.value
+            releaseStepCommandAndRemaining("shipToSonatype", log)(state.value)
             log.info("shipped")
             ()
           }
@@ -76,16 +99,14 @@ object ShipAutoPlugin extends AutoPlugin {
           }
         }
       }.value
-    }
-      ,
+    },
+      commands += shipToSonatype
+//      ,
     // to release we have to publish the signed artefacts first
-    SonatypeKeys.sonatypeReleaseAll <<= SonatypeKeys.sonatypeReleaseAll.dependsOn(PgpKeys.publishSigned)
-      ,
+//    SonatypeCommand.sonatypeReleaseAll <<= SonatypeCommand.sonatypeReleaseAll.dependsOn(PgpKeys.publishSigned)
+//      ,
     // not needed usually, but we don't want to publish something we didn't test
-    PgpKeys.publishSigned <<= PgpKeys.publishSigned.dependsOn(test in Test)
-      ,
-    // to upload the changelog we have to build it first
-    S3Plugin.S3.upload <<= S3Plugin.S3.upload.dependsOn(ChangeLogBuild.changeLog)
+//    PgpKeys.publishSigned <<= PgpKeys.publishSigned.dependsOn(test in Test)
       ,
     // to ship it we have to test first
     testAndOptionallyShip <<= testAndOptionallyShip.dependsOn(test in Test)

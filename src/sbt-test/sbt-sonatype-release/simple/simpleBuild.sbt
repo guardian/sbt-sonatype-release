@@ -12,12 +12,6 @@ organization := "com.gu"
 // enable the plugin
 lazy val root = (project in file(".")).enablePlugins(ShipAutoPlugin)
 
-// add any additional files to upload to s3
-mappings in upload ++= Seq((new java.io.File("local.uploadTest.txt"),"uploadTest.txt"))
-
-// add the amazon hostname for the s3 bucket
-host in upload := "scala-automation.s3.amazonaws.com"
-
 // here is your PGP secret key and public key rings
 pgpSecretRing := file("local.secring.gpg")
 
@@ -41,3 +35,13 @@ pomExtra := (
   )
 
 licenses := Seq("Apache V2" -> url("http://www.apache.org/licenses/LICENSE-2.0.html"))
+
+publishMavenStyle := true
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
